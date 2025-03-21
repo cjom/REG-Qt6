@@ -60,13 +60,12 @@ jobs:
 
           pwd
 
-          ls -la ${GITHUB_WORKSPACE}/REG-LINUX/configs/
-          mkdir -p ${GITHUB_WORKSPACE}/REG-LINUX/output/${{ matrix.platform }}
           # Build
+          CUSTOM_DIR=${GITHUB_WORKSPACE}/REG-LINUX/custom BUILDROOT_DIR${GITHUB_WORKSPACE}/REG-LINUX/buildroot ${GITHUB_WORKSPACE}/REG-LINUX/scripts/linux/mergeToBR.sh
+          mkdir -p ${GITHUB_WORKSPACE}/REG-LINUX/output/${{ matrix.platform }}
           ${GITHUB_WORKSPACE}/REG-LINUX/configs/createDefconfig.sh ${GITHUB_WORKSPACE}/REG-LINUX/configs/reglinux-${{ matrix.platform }}
           CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/output/${{ matrix.platform }} BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot reglinux-${{ matrix.platform }}_defconfig
-          cd ${GITHUB_WORKSPACE}/REG-LINUX/output/${{ matrix.platform }}
-          CCACHE_DISABLE=1 make reglinux-qt6
+          CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/output/${{ matrix.platform }} BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot reglinux-qt6
           
           # Create built output directory
           mkdir -p ${GITHUB_WORKSPACE}/REG-QT6-COMPILED
