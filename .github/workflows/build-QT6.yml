@@ -42,7 +42,7 @@ jobs:
 
           rm -rf .git .github
           # After each package is compiled and installed, delete build folder
-          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind $(BUILD_DIR) -mindepth 1 -maxdepth 1 -type d -not iname "buildroot-config" -printf "%T\@\\t%p\\n" | sort -g | head -n -5 | cut -f 2- | xargs -d $"\\n" sh -c "for arg do cd "\$arg"; shopt -s extglob; rm -rvf \!\(\.stamp*|\.br*|\.config\); shopt -u extglob; done" _ \
+          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind $(BUILD_DIR) -mindepth 1 -maxdepth 1 -type d -not iname "buildroot-config" -printf "%T\@\\t%p\\n" | sort -g | head -n -5 | cut -f 2- | xargs -d $"\\n" sh -c "for arg do cd \"\\$arg\"; shopt -s extglob; rm -rvf \!\(\.stamp*|\.br*|\.config\); shopt -u extglob; done" _ \
           	du -h -s $(PWD) \
           	df -Ph $(PWD) \n :' buildroot/package/pkg-generic.mk
           # After each downloaded package is extracted, delete older and keep latest 3
