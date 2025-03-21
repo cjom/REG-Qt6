@@ -103,7 +103,7 @@ jobs:
           sed -i s/#BR2_PACKAGE_QT6BASE_DEFAULT_QPA=\"wayland\"/BR2_PACKAGE_QT6BASE_DEFAULT_QPA=\"wayland\"/ configs/reglinux-board.common
 
           # Version
-          qtversion=$(grep -m 1 REGLINUX_QT6_VERSION package/reglinux/libraries/reglinux-qt6/reglinux-qt6.mk | sed -e "s/.*=[ ]*//")
+          qtversion=$(grep -m 1 REGLINUX_QT6_VERSION package/libraries/reglinux-qt6/reglinux-qt6.mk | sed -e "s/.*=[ ]*//")
           echo "qtversion=${qtversion}" >> "$GITHUB_OUTPUT"
           
 
