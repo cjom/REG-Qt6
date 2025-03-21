@@ -60,16 +60,16 @@ jobs:
 
           pwd
 
-          sudo ls -la ${GITHUB_WORKSPACE}/REG-LINUX/configs/
+          ls -la ${GITHUB_WORKSPACE}/REG-LINUX/configs/
           mkdir -p ${GITHUB_WORKSPACE}/REG-LINUX/output/${{ matrix.platform }}
           # Build
-          sudo ${GITHUB_WORKSPACE}/REG-LINUX/configs/createDefconfig.sh ${GITHUB_WORKSPACE}/REG-LINUX/configs/reglinux-${{ matrix.platform }}
-          sudo CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/output/${{ matrix.platform }} BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot reglinux-${{ matrix.platform }}_defconfig
+          ${GITHUB_WORKSPACE}/REG-LINUX/configs/createDefconfig.sh ${GITHUB_WORKSPACE}/REG-LINUX/configs/reglinux-${{ matrix.platform }}
+          CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/output/${{ matrix.platform }} BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot reglinux-${{ matrix.platform }}_defconfig
           cd ${GITHUB_WORKSPACE}/REG-LINUX/output/${{ matrix.platform }}
-          sudo CCACHE_DISABLE=1 make reglinux-qt6
+          CCACHE_DISABLE=1 make reglinux-qt6
           
           # Create built output directory
-          sudo mkdir -p ${GITHUB_WORKSPACE}/REG-QT6-COMPILED
+          mkdir -p ${GITHUB_WORKSPACE}/REG-QT6-COMPILED
 
           # Create package
           cd ${GITHUB_WORKSPACE}/REG-LINUX/output/${{ matrix.platform }} || exit 1
