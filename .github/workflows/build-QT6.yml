@@ -43,8 +43,13 @@ jobs:
         run: |
           cat << EOF > free_some_space.sh
           #!/bin/bash
-          echo "cd \"\$@\""
-          cd "\$@"
+          
+          pwd
+          
+          cd "\$1"
+          
+          pwd
+          
           shopt -s extglob
           rm -rvf !(.stamp*|.br*|.config)
           shopt -u extglob
@@ -65,6 +70,8 @@ jobs:
           # After each downloaded package is extracted, delete older and keep latest 3
           sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs -r rm -rfv :' buildroot/package/pkg-generic.mk
           
+          # Disable CCACHE
+          sed -i "/BR2_CCACHE/d" configs/reglinux-board.common
           # Enable the flag to build QT6 from source
           sed -i s/#BR2_PACKAGE_REGLINUX_QT6=y/BR2_PACKAGE_REGLINUX_QT6=y/ configs/reglinux-board.common
           sed -i s/#BR2_PACKAGE_REGLINUX_QT6_BUILD_FROM_SOURCE=y/BR2_PACKAGE_REGLINUX_QT6_BUILD_FROM_SOURCE=y/ configs/reglinux-board.common
