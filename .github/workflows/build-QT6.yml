@@ -48,11 +48,11 @@ jobs:
 
           rm -rf .git .github
           # After each package is compiled and installed, delete build folder
-          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind $(BUILD_DIR) -mindepth 1 -maxdepth 1 -type d -not iname "buildroot-config" -printf "%T\@\\t%p\\n" | sort -g | head -n -5 | cut -f 2- | xargs -d \\\$\"\\n\" -n1 bash -c "${GITHUB_WORKSPACE}/free_some_space.sh" \
+          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind $(BUILD_DIR) -mindepth 1 -maxdepth 1 -type d -not iname "buildroot-config" -printf "%T\@\\t%p\\n" | sort -g | head -n -5 | cut -f 2- | xargs -d "\\n" -n1 -r bash -c "${GITHUB_WORKSPACE}/free_some_space.sh" \
           	du -h -s $(PWD) \
           	df -Ph $(PWD) \n :' buildroot/package/pkg-generic.mk
           # After each downloaded package is extracted, delete older and keep latest 3
-          sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs rm -rfv :' buildroot/package/pkg-generic.mk
+          sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs -r rm -rfv :' buildroot/package/pkg-generic.mk
          
           # Enable the flag to build QT6 from source
           sed -i s/#BR2_PACKAGE_REGLINUX_QT6=y/BR2_PACKAGE_REGLINUX_QT6=y/ configs/reglinux-board.common
