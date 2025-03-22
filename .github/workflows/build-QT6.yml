@@ -43,9 +43,7 @@ jobs:
         run: |
           cat << EOF > free_some_space.sh
           #!/bin/bash
-          set -x
-          cd "$1"
-          
+         
           pwd
           
           shopt -s extglob
@@ -53,16 +51,13 @@ jobs:
           shopt -u extglob
           EOF
           chmod 755 free_some_space.sh
-          
-          cat free_some_space.sh
-          
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
           cd REG-LINUX
           git submodule init
           git submodule update
           rm -rf .git .github
           # After each package is compiled and installed, delete older packages and keep only newest 5
-          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind $(BUILD_DIR) -mindepth 1 -maxdepth 1 -type d -not -iname "buildroot-config" -printf "%T\@\\t%p\\n" | sort -g | head -n -5 | cut -f 2- | xargs -d "\\n" -n1 -rt -- bash -c "${GITHUB_WORKSPACE}/free_some_space.sh" \
+          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind $(BUILD_DIR) -mindepth 1 -maxdepth 1 -type d -not -iname "buildroot-config" -printf "%T\@\\t%p\\n" | sort -g | head -n -5 | cut -f 2- | xargs -d "\\n" -n1 -rt -- bash -c "cd \{\} && ${GITHUB_WORKSPACE}/free_some_space.sh" \
           	du -h -s $(PWD) \
           	df -Ph $(PWD) \n :' buildroot/package/pkg-generic.mk
           # After each downloaded package is extracted, delete older and keep latest 3
