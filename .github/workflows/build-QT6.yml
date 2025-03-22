@@ -41,17 +41,25 @@ jobs:
         id: compile_step
         shell: bash
         run: |
+          cat << EOF > free_some_space.sh
+          #!/bin/bash
+          shopt -s extglob
+          rm -rvf !(.stamp*|.br*|.config)
+          shopt -u extglob
+          EOF
+          
+          cat free_some_space.sh
+          
+          chmod 755 free_some_space.sh
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
           cd REG-LINUX
           git submodule init
           git submodule update
           rm -rf .git .github
-          
           # After each package is compiled and installed, delete older packages and keep only newest 5
-          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind $(BUILD_DIR) -mindepth 1 -maxdepth 1 -type d -not -iname "buildroot-config" -printf "%T\@\\t%p\\n" | sort -g | head -n -5 | cut -f 2- | xargs -d "\\n" -I\{\} -n1 -rt -- bash -c "cd \{\} ; shopt -s extglob ; rm -rvf \!\(\.stamp*|\.br*|\.config\) ; shopt -u extglob" \
+          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind $(BUILD_DIR) -mindepth 1 -maxdepth 1 -type d -not -iname "buildroot-config" -printf "%T\@\\t%p\\n" | sort -g | head -n -5 | cut -f 2- | xargs -d "\\n" -I\{\} -n1 -rt -- bash -c "cd \{\} ; . ${GITHUB_WORKSPACE}/free_some_space.sh" \
           	du -h -s $(PWD) \
           	df -Ph $(PWD) \n :' buildroot/package/pkg-generic.mk
-          
           # After each downloaded package is extracted, delete older and keep latest 3
           sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs -r rm -rfv :' buildroot/package/pkg-generic.mk
           
@@ -65,6 +73,8 @@ jobs:
           # Version
           qtversion=$(grep -m 1 REGLINUX_QT6_VERSION package/libraries/reglinux-qt6/reglinux-qt6.mk | sed -e "s/.*=[ ]*//")
           echo "qtversion=${qtversion}" >> "$GITHUB_OUTPUT"
+          
+          pwd
           
           # Build
           CUSTOM_DIR=${GITHUB_WORKSPACE}/REG-LINUX/custom BUILDROOT_DIR=${GITHUB_WORKSPACE}/REG-LINUX/buildroot ${GITHUB_WORKSPACE}/REG-LINUX/scripts/linux/mergeToBR.sh
