@@ -41,30 +41,36 @@ jobs:
         id: compile_step
         shell: bash
         run: |
+          cat << EOF > free_some_space.sh
+          #/bin/bash
+          cd "$1"
+          shopt -s extglob
+          rm -rvf !(.stamp*|.br*|.config)
+          shopt -u extglob
+          EOF
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
           cd REG-LINUX
           git submodule init
           git submodule update
-
           rm -rf .git .github
-          # After each package is compiled and installed, delete build folder
+          # After each package is compiled and installed, delete older packages and keep only newest 5
           sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind $(BUILD_DIR) -mindepth 1 -maxdepth 1 -type d -not -iname "buildroot-config" -printf "%T\@\\t%p\\n" | sort -g | head -n -5 | cut -f 2- | xargs -d "\\n" -n1 -r bash -c "${GITHUB_WORKSPACE}/free_some_space.sh" \
           	du -h -s $(PWD) \
           	df -Ph $(PWD) \n :' buildroot/package/pkg-generic.mk
           # After each downloaded package is extracted, delete older and keep latest 3
           sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs -r rm -rfv :' buildroot/package/pkg-generic.mk
-         
+          
           # Enable the flag to build QT6 from source
           sed -i s/#BR2_PACKAGE_REGLINUX_QT6=y/BR2_PACKAGE_REGLINUX_QT6=y/ configs/reglinux-board.common
           sed -i s/#BR2_PACKAGE_REGLINUX_QT6_BUILD_FROM_SOURCE=y/BR2_PACKAGE_REGLINUX_QT6_BUILD_FROM_SOURCE=y/ configs/reglinux-board.common
           sed -i s/#BR2_PACKAGE_QT6BASE_DEFAULT_QPA=\"wayland\"/BR2_PACKAGE_QT6BASE_DEFAULT_QPA=\"wayland\"/ configs/reglinux-board.common
-
+          
           # Version
           qtversion=$(grep -m 1 REGLINUX_QT6_VERSION package/libraries/reglinux-qt6/reglinux-qt6.mk | sed -e "s/.*=[ ]*//")
           echo "qtversion=${qtversion}" >> "$GITHUB_OUTPUT"
-
+          
           pwd
-
+          
           # Build
           CUSTOM_DIR=${GITHUB_WORKSPACE}/REG-LINUX/custom BUILDROOT_DIR=${GITHUB_WORKSPACE}/REG-LINUX/buildroot ${GITHUB_WORKSPACE}/REG-LINUX/scripts/linux/mergeToBR.sh
           mkdir -p ${GITHUB_WORKSPACE}/REG-LINUX/output/${{ matrix.platform }}
@@ -74,7 +80,7 @@ jobs:
           
           # Create built output directory
           mkdir -p ${GITHUB_WORKSPACE}/REG-QT6-COMPILED
-
+          
           # Create package
           cd ${GITHUB_WORKSPACE}/REG-LINUX/output/${{ matrix.platform }} || exit 1
           staging="$(cat build/staging.dir)"
