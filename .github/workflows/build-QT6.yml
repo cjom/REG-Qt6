@@ -61,7 +61,7 @@ jobs:
           rm -rf .git .github
           
           # After each package is compiled and installed, delete older packages and keep only newest 50
-          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\t. \$\{GITHUB_WORKSPACE\}/free_some_space.sh $(BUILD_DIR)" \
+          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\t. \$\{GITHUB_WORKSPACE\}/free_some_space.sh $(BUILD_DIR) \
           	du -h -s $(PWD) \
           	df -Ph $(PWD) \n :' buildroot/package/pkg-generic.mk
           
