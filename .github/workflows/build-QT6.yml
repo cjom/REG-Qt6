@@ -50,7 +50,8 @@ jobs:
           # After each package is compiled and installed, delete older packages and keep only newest 50
           sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tdu -h -s $(PWD) \
           	df -Ph $(PWD) \
-          	while test $$(df -BG --output=avail $(PWD) | grep -oz "\[0-9\]*") -lt 4 \
+            FREESPACE=$(df -BG --output=avail $(PWD) | grep -oz "\[0-9\]*")
+          	while test $\{FREESPACE\} -lt 4 \
           	do \
           	find $(BUILD_DIR) -mindepth 1 -maxdepth 1 -type d -not \\\( -iname "buildroot-config" -or -iname "linux-headers-*" -or -iname "toolchain*" \\\) -exec du -sk -- \{\} \\; 2\>/dev/null | sort -hr | head -1 | cut -f 2- | xargs -d "\\n" -I\{\} -n1 -rt -- find \{\} -type f -not \\\( -iname ".stamp*" -or -iname ".br*" -or -iname ".config" -or -iname "Makefile*" -or -iname "Config*" -or -iname "autoconf*" -or -iname "auto.conf*" -or -iname "libavahi-client.la" -or -iname "libavahi-client.so" -or -iname "libavahi-common.la" -or -iname "libavahi-common.so" -or -iname "libblkid.la" -or -iname "libblkid.so" -or -iname "libx*.la*" \\\) -delete \
           	done \n :' buildroot/package/pkg-generic.mk
