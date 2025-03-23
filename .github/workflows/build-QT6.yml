@@ -45,8 +45,8 @@ jobs:
           #!/bin/bash
           echo "BUILD_DIR = \$1"
           cd "\$1"
-          echo "\$\{PWD\} FREE SPACE IS \$(df -BG --output=avail ./ | grep -oz "\[0-9\]*")"
-          while test "\$(df -BG --output=avail ./ | grep -oz "\[0-9\]*")" -lt 4 ; do
+          echo "\${PWD} FREE SPACE IS \$(df -BG --output=avail ./ | grep -oz "[0-9]*")"
+          while test "\$(df -BG --output=avail ./ | grep -oz "[0-9]*")" -lt 4 ; do
           	find ./ -mindepth 1 -maxdepth 1 -type d -not \( -iname "buildroot-config" -or -iname "linux-headers-*" -or -iname "toolchain*" \) -exec du -sk -- {} \; 2\>/dev/null | sort -hr | head -1 | cut -f 2- | xargs -d "\\n" -I{} -n1 -rt -- find {} -type f -not \( -iname ".stamp*" -or -iname ".br*" -or -iname ".config" -or -iname "Makefile*" -or -iname "Config*" -or -iname "autoconf*" -or -iname "auto.conf*" -or -iname "libavahi-client.la" -or -iname "libavahi-client.so" -or -iname "libavahi-common.la" -or -iname "libavahi-common.so" -or -iname "libblkid.la" -or -iname "libblkid.so" -or -iname "libx*.la*" \) -delete
           done
           EOF
