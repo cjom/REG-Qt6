@@ -41,13 +41,6 @@ jobs:
         id: compile_step
         shell: bash
         run: |
-          cat << EOF > free_some_space.sh
-          #!/bin/bash
-          shopt -s extglob
-          rm -rvf !(.stamp*|.br*|.config|Makefile*|lib[xX]*.la*)
-          shopt -u extglob
-          EOF
-          chmod 755 free_some_space.sh
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
           cd REG-LINUX
           git submodule init
@@ -55,9 +48,12 @@ jobs:
           rm -rf .git .github
           
           # After each package is compiled and installed, delete older packages and keep only newest 50
-          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind $(BUILD_DIR) -mindepth 1 -maxdepth 1 -type d -not \\\( -iname "buildroot-config" -or -iname "linux-headers-*" -or -iname "toolchain*" \\\) -printf "%T\@\\t%p\\n" | sort -g | head -n -50 | cut -f 2- | xargs -d "\\n" -I\{\} -n1 -rt -- bash -c "cd \{\} ; . ${GITHUB_WORKSPACE}/free_some_space.sh" \
-          	du -h -s $(PWD) \
-          	df -Ph $(PWD) \n :' buildroot/package/pkg-generic.mk
+          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tdu -h -s $(PWD) \
+          	df -Ph $(PWD) \
+          	while test \$\$(df -BG --output=avail \$(PWD) | grep -oz "\[0-9\]*") -lt 4 \
+          	do \
+          	find $(BUILD_DIR) -mindepth 1 -maxdepth 1 -type d -not \\\( -iname "buildroot-config" -or -iname "linux-headers-*" -or -iname "toolchain*" \\\) -exec du -sk -- \{\} \\; 2\>/dev/null | sort -hr | head -1 | cut -f 2- | xargs -d "\\n" -I\{\} -n1 -rt -- find \{\} -type f -not \\\( -iname ".stamp*" -or -iname ".br*" -or -iname ".config" -or -iname "Makefile*" -or -iname "Config*" -or -iname "autoconf*" -or -iname "auto.conf*" -or -iname "libavahi-client.la" -or -iname "libavahi-client.so" -or -iname "libavahi-common.la" -or -iname "libavahi-common.so" -or -iname "libblkid.la" -or -iname "libblkid.so" -or -iname "libx*.la*" \\\) -delete \
+          	done \n :' buildroot/package/pkg-generic.mk
           
           # After each downloaded package is extracted, delete older and keep latest 3
           sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs -r rm -rfv :' buildroot/package/pkg-generic.mk
