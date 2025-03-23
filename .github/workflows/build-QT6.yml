@@ -43,7 +43,7 @@ jobs:
         run: |
           cat << EOF > free_some_space.sh
           #!/bin/bash
-          echo "BUILD_DIR = ${BUILD_DIR}
+          echo "BUILD_DIR = ${BUILD_DIR}"
           cd ${BUILD_DIR}
           echo "${PWD} FREE SPACE IS $(df -BG --output=avail ./ | grep -oz "[0-9]*")"
           while test "$(df -BG --output=avail ./ | grep -oz "[0-9]*")" -lt 4 ; do
