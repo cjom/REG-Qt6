@@ -37,6 +37,11 @@ jobs:
       matrix:
         platform: [bcm2711]
     steps:
+      - name: Tmate
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
+        timeout-minutes: 30
+
       - name: Compile ${{ matrix.platform }}
         id: compile_step
         shell: bash
@@ -106,17 +111,36 @@ jobs:
           # Do release
           echo "dorelease=${{ true }}" >> "$GITHUB_OUTPUT"
 
-      - name: Tmate
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
-        timeout-minutes: 20
-
       - name: upload_artifacts_${{ matrix.platform }}
         id: upload_artifacts
         uses: actions/upload-artifact@v4
         with:
           name: reglinux-qt6-${{ steps.compile_step.outputs.qtversion }}-${{ matrix.platform }}
           path: ./REG-QT6-COMPILED/
+
+      - name: upload_build_${{ matrix.platform }}_part_1
+        if: ${{ ! cancelled() }}
+        id: upload_build_part_1
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 9
+          overwrite: true
+          include-hidden-files: true
+          name: build-${{ steps.compile_step.outputs.qtversion }}-${{ matrix.platform }}
+          path: |
+            ./REG-LINUX/output/${{ matrix.platform }}/
+            !./REG-LINUX/output/${{ matrix.platform }}/host
+
+      - name: upload_build_${{ matrix.platform }}_part_2
+        if: ${{ ! cancelled() }}
+        id: upload_build_part_2
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 9
+          overwrite: true
+          include-hidden-files: true
+          name: build-host-${{ steps.compile_step.outputs.qtversion }}-${{ matrix.platform }}
+          path: ./REG-LINUX/output/${{ matrix.platform }}/host/
         
   create_release:
     name: Create release
