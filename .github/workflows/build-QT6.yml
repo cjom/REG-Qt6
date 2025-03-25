@@ -37,21 +37,20 @@ jobs:
       matrix:
         platform: [bcm2711]
     steps:
-      - name: Tmate
-        uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 30
-
       - name: Compile ${{ matrix.platform }}
         id: compile_step
         shell: bash
         run: |
+          # Abort before 6 hours limit to save artifacts
+          ( sleep 20400; exit 1 ) </dev/null &>/dev/null &
+          
           cat << EOF > free_some_space.sh
           #!/bin/bash
           echo "BUILD_DIR = \$1"
           cd "\$1"
-          echo "\${PWD} FREE SPACE IS \$(df -BG --output=avail ./ | grep -oz "[0-9]*")"
-          while test "\$(df -BG --output=avail ./ | grep -oz "[0-9]*")" -lt 4 ; do
-          	find ./ -mindepth 1 -maxdepth 1 -type d -not \( -iname "buildroot-config" -or -iname "linux-headers-*" -or -iname "toolchain*" \) -exec du -sk -- {} \; 2\>/dev/null | sort -hr | head -1 | cut -f 2- | xargs -d "\\n" -I{} -n1 -rt -- find {} -type f -not \( -iname ".stamp*" -or -iname ".br*" -or -iname ".config" -or -iname "Makefile*" -or -iname "Config*" -or -iname "autoconf*" -or -iname "auto.conf*" -or -iname "libavahi-client.la" -or -iname "libavahi-client.so" -or -iname "libavahi-common.la" -or -iname "libavahi-common.so" -or -iname "libblkid.la" -or -iname "libblkid.so" -or -iname "libx*.la*" \) -delete
+          echo "\${PWD} FREE SPACE IS \$(df -BG --output=avail ./ | tail -1 | grep -o "[0-9G]*")"
+          while test "\$(df -BG --output=avail ./ | tail -1 | grep -o "[0-9]*")" -lt 6 ; do
+          	find ./ -mindepth 1 -maxdepth 1 -type d -not \( -iname "buildroot-config" -or -iname "linux-headers-*" -or -iname "toolchain*" \) -exec du -sk -- {} \; 2>/dev/null | sort -hr | head -1 | cut -f 2- | xargs -d "\\n" -I{} -n1 -rt -- find {} -type f -not \( -iname ".stamp*" -or -iname ".br*" -or -iname ".config" -or -iname "Makefile*" -or -iname "Config*" -or -iname "autoconf*" -or -iname "auto.conf*" -or -iname "libavahi-client.la" -or -iname "libavahi-client.so" -or -iname "libavahi-common.la" -or -iname "libavahi-common.so" -or -iname "libblkid.la" -or -iname "libblkid.so" -or -iname "libx*.la*" \) -delete
           done
           EOF
           chmod 755 free_some_space.sh
@@ -109,6 +108,11 @@ jobs:
           
           # Do release
           echo "dorelease=${{ true }}" >> "$GITHUB_OUTPUT"
+
+      - name: Tmate
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        timeout-minutes: 30
 
       - name: upload_artifacts_${{ matrix.platform }}
         id: upload_artifacts
