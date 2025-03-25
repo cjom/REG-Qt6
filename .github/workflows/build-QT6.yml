@@ -39,7 +39,6 @@ jobs:
     steps:
       - name: Tmate
         uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
         timeout-minutes: 30
 
       - name: Compile ${{ matrix.platform }}
