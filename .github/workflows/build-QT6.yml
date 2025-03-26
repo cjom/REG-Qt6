@@ -47,7 +47,7 @@ jobs:
           cat << EOF > free_some_space.sh
           #!/bin/bash
           cd "\$1"
-          while test "\$(df -BG --output=avail ./ | tail -1 | grep -o "[0-9]*")" -lt 8 ; do
+          while test "\$(df -BG --output=avail ./ | tail -1 | grep -o "[0-9]*" | head -1)" -lt 8 ; do
           	find ./ -mindepth 1 -maxdepth 1 -type d -not \( -iname "buildroot-config" -or -iname "linux-headers-*" -or -iname "toolchain*" \) -exec du -sk -- {} \; 2>/dev/null | sort -hr | head -1 | cut -f 2- | xargs -d "\\n" -I{} -n1 -rt -- find {} -type f -not \( -iname ".stamp*" -or -iname ".br*" -or -iname "*config*" -or -iname "Makefile*" -or -iname "*autoconf*" -or -iname "*auto.conf*" -or -iname "CMakeLists*" -or -iname "libavahi-client.la" -or -iname "libavahi-client.so" -or -iname "libavahi-common.la" -or -iname "libavahi-common.so" -or -iname "libblkid.la" -or -iname "libblkid.so" -or -iname "libx*.la*" \) -delete
           done
           EOF
@@ -82,6 +82,7 @@ jobs:
           # TEST: Force newer QT6 version
           sed -i -e 's/^REGLINUX_QT6_VERSION.*/REGLINUX_QT6_VERSION = 6\.8\.3/' package/libraries/reglinux-qt6/reglinux-qt6.mk
           sed -i -e 's/^QT6_VERSION_MAJOR.*/QT6_VERSION_MAJOR = 6\.8/' buildroot/package/qt6/qt6.mk
+          rm -f buildroot/package/qt6/qt6base/qt6base.hash
           
           # Build
           ${GITHUB_WORKSPACE}/REG-LINUX/configs/createDefconfig.sh ${GITHUB_WORKSPACE}/REG-LINUX/configs/reglinux-${{ matrix.platform }}
