@@ -76,20 +76,22 @@ jobs:
           sed -i s/#BR2_PACKAGE_REGLINUX_QT6_BUILD_FROM_SOURCE=y/BR2_PACKAGE_REGLINUX_QT6_BUILD_FROM_SOURCE=y/ configs/reglinux-board.common
           sed -i s/#BR2_PACKAGE_QT6BASE_DEFAULT_QPA=\"wayland\"/BR2_PACKAGE_QT6BASE_DEFAULT_QPA=\"wayland\"/ configs/reglinux-board.common
           
+          # Merge buildroot patches
+          CUSTOM_DIR=${GITHUB_WORKSPACE}/REG-LINUX/custom BUILDROOT_DIR=${GITHUB_WORKSPACE}/REG-LINUX/buildroot ${GITHUB_WORKSPACE}/REG-LINUX/scripts/linux/mergeToBR.sh
+          
           # TEST: Force newer QT6 version
           sed -i -e 's/^REGLINUX_QT6_VERSION.*/REGLINUX_QT6_VERSION = 6\.8\.3/' package/libraries/reglinux-qt6/reglinux-qt6.mk
           sed -i -e 's/^QT6_VERSION_MAJOR.*/QT6_VERSION_MAJOR = 6\.8/' buildroot/package/qt6/qt6.mk
           
-          # Version
-          qtversion=$(grep -m 1 REGLINUX_QT6_VERSION package/libraries/reglinux-qt6/reglinux-qt6.mk | sed -e "s/.*=[ ]*//")
-          echo "qtversion=${qtversion}" >> "$GITHUB_OUTPUT"
-          
           # Build
-          CUSTOM_DIR=${GITHUB_WORKSPACE}/REG-LINUX/custom BUILDROOT_DIR=${GITHUB_WORKSPACE}/REG-LINUX/buildroot ${GITHUB_WORKSPACE}/REG-LINUX/scripts/linux/mergeToBR.sh
           ${GITHUB_WORKSPACE}/REG-LINUX/configs/createDefconfig.sh ${GITHUB_WORKSPACE}/REG-LINUX/configs/reglinux-${{ matrix.platform }}
           CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output/build BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot reglinux-${{ matrix.platform }}_defconfig
           CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output/build BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot qt6shadertools
           CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output/build BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot reglinux-qt6
+          
+          # Version
+          qtversion=$(grep -m 1 REGLINUX_QT6_VERSION package/libraries/reglinux-qt6/reglinux-qt6.mk | sed -e "s/.*=[ ]*//")
+          echo "qtversion=${qtversion}" >> "$GITHUB_OUTPUT"
           
           # Create built output directory
           mkdir -p ${GITHUB_WORKSPACE}/REG-QT6-COMPILED
