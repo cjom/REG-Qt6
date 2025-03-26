@@ -82,7 +82,7 @@ jobs:
           # TEST: Force newer QT6 version
           sed -i -e 's/^REGLINUX_QT6_VERSION.*/REGLINUX_QT6_VERSION = 6\.8\.3/' package/libraries/reglinux-qt6/reglinux-qt6.mk
           sed -i -e 's/^QT6_VERSION_MAJOR.*/QT6_VERSION_MAJOR = 6\.8/' buildroot/package/qt6/qt6.mk
-          rm -f buildroot/package/qt6/qt6base/qt6base.hash
+          find buildroot/package/qt6/ -type f -iname '*.hash' -delete
           
           # Build
           ${GITHUB_WORKSPACE}/REG-LINUX/configs/createDefconfig.sh ${GITHUB_WORKSPACE}/REG-LINUX/configs/reglinux-${{ matrix.platform }}
