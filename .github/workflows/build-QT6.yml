@@ -41,9 +41,6 @@ jobs:
         id: compile_step
         shell: bash
         run: |
-          # Abort before 6 hours limit to save artifacts
-          ( sleep 20400; exit 1 ) </dev/null &>/dev/null &
-          
           cat << EOF > free_some_space.sh
           #!/bin/bash
           cd "\$1"
@@ -88,29 +85,6 @@ jobs:
           # Version
           qtversion=$(grep -m 1 REGLINUX_QT6_VERSION package/libraries/reglinux-qt6/reglinux-qt6.mk | sed -e "s/.*=[ ]*//")
           echo "qtversion=${qtversion}" >> "$GITHUB_OUTPUT"
-          
-      - name: Download build Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: 14095543217
-          name: build-6.8.3-bcm2711
-          path: ./REG-LINUX/buildroot/output/
-
-      - name: Download host Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: 14095543217
-          name: build-host-6.8.3-bcm2711
-          path: ./REG-LINUX/buildroot/output/host/
-
-      - name: Compile-2 ${{ matrix.platform }}
-        id: compile_step_2
-        shell: bash
-        run: |
-          
-          chmod -R 777 ./REG-LINUX/buildroot/output
           
           # Build
           ${GITHUB_WORKSPACE}/REG-LINUX/configs/createDefconfig.sh ${GITHUB_WORKSPACE}/REG-LINUX/configs/reglinux-${{ matrix.platform }}
