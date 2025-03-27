@@ -92,12 +92,16 @@ jobs:
       - name: Download build Artifacts
         uses: actions/download-artifact@v4
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 14095543217
           name: build-6.8.3-bcm2711
           path: ./REG-LINUX/buildroot/output/
 
       - name: Download host Artifacts
         uses: actions/download-artifact@v4
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 14095543217
           name: build-host-6.8.3-bcm2711
           path: ./REG-LINUX/buildroot/output/host/
 
