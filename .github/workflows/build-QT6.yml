@@ -110,8 +110,7 @@ jobs:
         shell: bash
         run: |
           
-          chmod 777 ./REG-LINUX/buildroot/output
-          find ./REG-LINUX/buildroot/output/ -type d -exec chmod 777 {} \;
+          chmod -R 777 ./REG-LINUX/buildroot/output
           
           # Build
           ${GITHUB_WORKSPACE}/REG-LINUX/configs/createDefconfig.sh ${GITHUB_WORKSPACE}/REG-LINUX/configs/reglinux-${{ matrix.platform }}
