@@ -76,12 +76,6 @@ jobs:
           # Merge buildroot patches
           CUSTOM_DIR=${GITHUB_WORKSPACE}/REG-LINUX/custom BUILDROOT_DIR=${GITHUB_WORKSPACE}/REG-LINUX/buildroot ${GITHUB_WORKSPACE}/REG-LINUX/scripts/linux/mergeToBR.sh
           
-          # TEST: Force newer QT6 version
-          sed -i -e 's/^REGLINUX_QT6_VERSION.*/REGLINUX_QT6_VERSION = 6\.8\.3/' package/libraries/reglinux-qt6/reglinux-qt6.mk
-          sed -i -e 's/^QT6_VERSION_MAJOR.*/QT6_VERSION_MAJOR = 6\.8/' buildroot/package/qt6/qt6.mk
-          find buildroot/package/qt6/ -type f -iname '*.hash' -delete
-          rm -f buildroot/package/qt6/qt6declarative/0001-Fix-build-with--no-feature-network.patch
-          
           # Version
           qtversion=$(grep -m 1 REGLINUX_QT6_VERSION package/libraries/reglinux-qt6/reglinux-qt6.mk | sed -e "s/.*=[ ]*//")
           echo "qtversion=${qtversion}" >> "$GITHUB_OUTPUT"
@@ -89,8 +83,6 @@ jobs:
           # Build
           ${GITHUB_WORKSPACE}/REG-LINUX/configs/createDefconfig.sh ${GITHUB_WORKSPACE}/REG-LINUX/configs/reglinux-${{ matrix.platform }}
           CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output/build BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot reglinux-${{ matrix.platform }}_defconfig
-          CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output/build BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot qt6tools
-          CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output/build BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot qt6shadertools
           CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output/build BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot reglinux-qt6
           
           # Create built output directory
