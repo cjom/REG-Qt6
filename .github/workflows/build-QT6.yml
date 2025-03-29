@@ -3,12 +3,6 @@ name: Build REG-linux QT6
 on:
   push: 
   workflow_dispatch:
-    inputs:
-      debug_enabled:
-        type: boolean
-        description: 'with TMATE'
-        required: false
-        default: false
 
 concurrency:
     group: ${{ github.repository }}-${{ github.workflow }}-${{ github.ref }}
@@ -31,11 +25,10 @@ jobs:
     container: reglinux/reglinux-build:latest
     outputs:
       qtversion: ${{ steps.compile_step.outputs.qtversion }}
-      sufixdate: ${{ steps.compile_step.outputs.sufixdate }}
       dorelease: ${{ false || steps.compile_step.outputs.dorelease }}
     strategy:
       matrix:
-        platform: [bcm2711]
+        platform: [rk3288, h5, bcm2711]
     steps:
       - name: Compile ${{ matrix.platform }}
         id: compile_step
@@ -101,14 +94,10 @@ jobs:
           cat qt6-host-files.txt qt6-staging-files.txt qt6-target-files.txt >filelist.txt
           find . | grep /host/ | grep Qt >>filelist.txt
           find . | grep /target/ | grep Qt >>filelist.txt
-          awk -i inplace '!seen[$0]++' filelist.txt
-          tar cvzf  ${GITHUB_WORKSPACE}/REG-QT6-COMPILED/reglinux-qt6-${qtversion}"-${{ matrix.platform }}.tar.gz -T filelist.txt
+          sort -o sortedfilelist.txt -u filelist.txt
+          tar cvzf  ${GITHUB_WORKSPACE}/REG-QT6-COMPILED/reglinux-qt6-${qtversion}"-${{ matrix.platform }}.tar.gz -T sortedfilelist.txt
+          echo "dorelease=${{ true }}" >> "$GITHUB_OUTPUT"
           
-      - name: Tmate
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
-        timeout-minutes: 30
-
       - name: upload_artifacts_${{ matrix.platform }}
         id: upload_artifacts
         uses: actions/upload-artifact@v4
@@ -116,6 +105,39 @@ jobs:
           name: reglinux-qt6-${{ steps.compile_step.outputs.qtversion }}-${{ matrix.platform }}
           path: ./REG-QT6-COMPILED/
 
+      - name: upload_build_${{ matrix.platform }}_part_1
+        id: upload_build_part_1
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 9
+          overwrite: true
+          include-hidden-files: true
+          name: build-${{ steps.compile_step.outputs.qtversion }}-${{ matrix.platform }}
+          path: |
+            ./REG-LINUX/buildroot/output/
+            !./REG-LINUX/buildroot/output/host
+
+      - name: upload_build_${{ matrix.platform }}_part_2
+        id: upload_build_part_2
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 9
+          overwrite: true
+          include-hidden-files: true
+          name: build-host-${{ steps.compile_step.outputs.qtversion }}-${{ matrix.platform }}
+          path: ./REG-LINUX/buildroot/output/host/
+
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ needs.build.outputs.dorelease && ! cancelled() }}
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./REG-QT6-COMPILED/
+          merge-multiple: true
       - name: Create release
         uses: softprops/action-gh-release@master
         with:
