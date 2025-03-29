@@ -37,13 +37,6 @@ jobs:
       matrix:
         platform: [bcm2711]
     steps:
-      - name: Install Dep ${{ matrix.platform }}
-        id: install_dep_step
-        shell: bash
-        run: |
-          apt update && apt upgrade -y
-          apt install -y libfontconfig1-dev libfreetype-dev libgtk-3-dev libx11-dev libx11-xcb-dev libxcb-cursor-dev libxcb-glx0-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-render-util0-dev libxcb-shape0-dev libxcb-shm0-dev libxcb-sync-dev libxcb-util-dev libxcb-xfixes0-dev libxcb-xkb-dev libxcb1-dev libxext-dev libxfixes-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev libxrender-dev
-          apt autoremove -y && apt autoclean -y
       - name: Compile ${{ matrix.platform }}
         id: compile_step
         shell: bash
@@ -51,8 +44,11 @@ jobs:
           cat << EOF > free_some_space.sh
           #!/bin/bash
           cd "\$1"
-          while test "\$(df -BG --output=avail ./ | tail -1 | grep -o "[0-9]*" | head -1)" -lt 8 ; do
+          find ./ -type f -iname "*.o" -delete
+          ESCAPELOOP=0
+          while test "\$(df -BG --output=avail ./ | tail -1 | grep -o "[0-9]*" | head -1)" -lt 5 \&\& test "\$ESCAPELOOP" -lt 10; do
           	find ./ -mindepth 1 -maxdepth 1 -type d -not \( -iname "buildroot-config" -or -iname "linux-headers-*" -or -iname "toolchain*" \) -exec du -sk -- {} \; 2>/dev/null | sort -hr | head -1 | cut -f 2- | xargs -d "\\n" -I{} -n1 -rt -- find {} -type f -not \( -iname ".stamp*" -or -iname ".br*" -or -iname "*config*" -or -iname "Makefile*" -or -iname "*autoconf*" -or -iname "*auto.conf*" -or -iname "CMakeLists*" -or -iname "libavahi-client.la" -or -iname "libavahi-client.so" -or -iname "libavahi-common.la" -or -iname "libavahi-common.so" -or -iname "libblkid.la" -or -iname "libblkid.so" -or -iname "libx*.la*" -or -iname "lib1.cpp" \) -delete
+            ((ESCAPELOOP++))
           done
           EOF
           chmod 755 free_some_space.sh
@@ -63,7 +59,7 @@ jobs:
           git submodule update
           rm -rf .git .github
           
-          # After each package is compiled and installed, delete older packages and keep only newest 50
+          # After each package is compiled and installed, delete some of the biggest folders
           sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\t. \$\{GITHUB_WORKSPACE\}/free_some_space.sh $(BUILD_DIR) \
           	du -h -s $(PWD) \
           	df -Ph $(PWD) \n :' buildroot/package/pkg-generic.mk
@@ -83,11 +79,6 @@ jobs:
           # Merge buildroot patches
           CUSTOM_DIR=${GITHUB_WORKSPACE}/REG-LINUX/custom BUILDROOT_DIR=${GITHUB_WORKSPACE}/REG-LINUX/buildroot ${GITHUB_WORKSPACE}/REG-LINUX/scripts/linux/mergeToBR.sh
           
-          # TEST: Force newer QT6 version
-          sed -i -e 's/^REGLINUX_QT6_VERSION.*/REGLINUX_QT6_VERSION = 6\.8\.3/' package/libraries/reglinux-qt6/reglinux-qt6.mk
-          sed -i -e 's/^QT6_VERSION_MAJOR.*/QT6_VERSION_MAJOR = 6\.8/' buildroot/package/qt6/qt6.mk
-          find buildroot/package/qt6/ -type f -iname '*.hash' -delete
-          
           # Version
           qtversion=$(grep -m 1 REGLINUX_QT6_VERSION package/libraries/reglinux-qt6/reglinux-qt6.mk | sed -e "s/.*=[ ]*//")
           echo "qtversion=${qtversion}" >> "$GITHUB_OUTPUT"
@@ -95,15 +86,13 @@ jobs:
           # Build
           ${GITHUB_WORKSPACE}/REG-LINUX/configs/createDefconfig.sh ${GITHUB_WORKSPACE}/REG-LINUX/configs/reglinux-${{ matrix.platform }}
           CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output/build BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot reglinux-${{ matrix.platform }}_defconfig
-          CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output/build BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot qt6tools
-          CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output/build BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot qt6shadertools
           CCACHE_DISABLE=1 make O_=${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output/build BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot reglinux-qt6
           
           # Create built output directory
           mkdir -p ${GITHUB_WORKSPACE}/REG-QT6-COMPILED
           
           # Create package
-          cd ${GITHUB_WORKSPACE}/REG-LINUX/output || exit 1
+          cd ${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output || exit 1
           staging="$(cat build/staging.dir)"
           cat build/host-qt6*/.files-list-host.txt | cut -d ',' -f 2 | sed -e 's/\.\//host\//g' >qt6-host-files.txt
           cat build/qt6*/.files-list-staging.txt | cut -d ',' -f 2 | sed -e "s+\.\/+$staging\/+g" >qt6-staging-files.txt
@@ -114,12 +103,9 @@ jobs:
           awk -i inplace '!seen[$0]++' filelist.txt
           tar cvzf  ${GITHUB_WORKSPACE}/REG-QT6-COMPILED/reglinux-qt6-${qtversion}"-${{ matrix.platform }}.tar.gz -T filelist.txt
           
-          # Do release
-          echo "dorelease=${{ true }}" >> "$GITHUB_OUTPUT"
-
       - name: Tmate
         uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
         timeout-minutes: 30
 
       - name: upload_artifacts_${{ matrix.platform }}
@@ -129,39 +115,6 @@ jobs:
           name: reglinux-qt6-${{ steps.compile_step.outputs.qtversion }}-${{ matrix.platform }}
           path: ./REG-QT6-COMPILED/
 
-      - name: upload_build_${{ matrix.platform }}_part_1
-        id: upload_build_part_1
-        uses: actions/upload-artifact@v4
-        with:
-          compression-level: 9
-          overwrite: true
-          include-hidden-files: true
-          name: build-${{ steps.compile_step.outputs.qtversion }}-${{ matrix.platform }}
-          path: |
-            ./REG-LINUX/buildroot/output/
-            !./REG-LINUX/buildroot/output/host
-
-      - name: upload_build_${{ matrix.platform }}_part_2
-        id: upload_build_part_2
-        uses: actions/upload-artifact@v4
-        with:
-          compression-level: 9
-          overwrite: true
-          include-hidden-files: true
-          name: build-host-${{ steps.compile_step.outputs.qtversion }}-${{ matrix.platform }}
-          path: ./REG-LINUX/buildroot/output/host/
-        
-  create_release:
-    name: Create release
-    runs-on: ubuntu-latest
-    needs: build
-    if: ${{ needs.build.outputs.dorelease && ! cancelled() }}
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./REG-QT6-COMPILED/
-          merge-multiple: true
       - name: Create release
         uses: softprops/action-gh-release@master
         with:
