@@ -28,7 +28,7 @@ jobs:
       dorelease: ${{ false || steps.compile_step.outputs.dorelease }}
     strategy:
       matrix:
-        platform: [rk3288, h5, bcm2711]
+        platform: [rk3288, h5, bcm2711, bcm2712, rk3326, rk3399, rk3588, s905gen3, s922x, sm8250, saphira, jh7110, k1, x86_64, x86_64_v3]
     steps:
       - name: Compile ${{ matrix.platform }}
         id: compile_step
@@ -74,8 +74,9 @@ jobs:
           CUSTOM_DIR=${GITHUB_WORKSPACE}/REG-LINUX/custom BUILDROOT_DIR=${GITHUB_WORKSPACE}/REG-LINUX/buildroot ${GITHUB_WORKSPACE}/REG-LINUX/scripts/linux/mergeToBR.sh
           
           # Version
-          qtversion=$(grep -m 1 REGLINUX_QT6_VERSION package/libraries/reglinux-qt6/reglinux-qt6.mk | sed -e "s/.*=[ ]*//")
+          qtversion="$(grep -m 1 QT6_VERSION_MAJOR buildroot/package/qt6/qt6.mk | sed -e 's/.*=[ ]*//')$(grep -m 1 'QT6_VERSION ' buildroot/package/qt6/qt6.mk | sed -e 's/.*)//')"
           echo "qtversion=${qtversion}" >> "$GITHUB_OUTPUT"
+          echo "qtversion=${qtversion}"
           
           # Build
           ${GITHUB_WORKSPACE}/REG-LINUX/configs/createDefconfig.sh ${GITHUB_WORKSPACE}/REG-LINUX/configs/reglinux-${{ matrix.platform }}
