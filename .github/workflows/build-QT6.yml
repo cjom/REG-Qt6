@@ -28,7 +28,8 @@ jobs:
       dorelease: ${{ false || steps.compile_step.outputs.dorelease }}
     strategy:
       matrix:
-        platform: [rk3288, h5, bcm2711, bcm2712, rk3326, rk3399, rk3588, s905gen3, s922x, sm8250, jh7110, k1, x86_64, x86_64_v3]
+        platform: [rk3288, h5, bcm2711, bcm2712, rk3326, rk3399, rk3588, s905gen3, s922x, sm8250, asahi, jh7110, k1, x86_64, x86_64_v3]
+      fail-fast: false
     steps:
       - name: Compile ${{ matrix.platform }}
         id: compile_step
