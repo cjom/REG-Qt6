@@ -95,7 +95,7 @@ jobs:
           find . | grep /host/ | grep Qt >>filelist.txt
           find . | grep /target/ | grep Qt >>filelist.txt
           sort -o sortedfilelist.txt -u filelist.txt
-          tar cvzf  ${GITHUB_WORKSPACE}/REG-QT6-COMPILED/reglinux-qt6-${qtversion}"-${{ matrix.platform }}.tar.gz -T sortedfilelist.txt
+          tar cvzf  ${GITHUB_WORKSPACE}/REG-QT6-COMPILED/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz -T sortedfilelist.txt
           echo "dorelease=${{ true }}" >> "$GITHUB_OUTPUT"
           
       - name: upload_artifacts_${{ matrix.platform }}
@@ -104,28 +104,6 @@ jobs:
         with:
           name: reglinux-qt6-${{ steps.compile_step.outputs.qtversion }}-${{ matrix.platform }}
           path: ./REG-QT6-COMPILED/
-
-      - name: upload_build_${{ matrix.platform }}_part_1
-        id: upload_build_part_1
-        uses: actions/upload-artifact@v4
-        with:
-          compression-level: 9
-          overwrite: true
-          include-hidden-files: true
-          name: build-${{ steps.compile_step.outputs.qtversion }}-${{ matrix.platform }}
-          path: |
-            ./REG-LINUX/buildroot/output/
-            !./REG-LINUX/buildroot/output/host
-
-      - name: upload_build_${{ matrix.platform }}_part_2
-        id: upload_build_part_2
-        uses: actions/upload-artifact@v4
-        with:
-          compression-level: 9
-          overwrite: true
-          include-hidden-files: true
-          name: build-host-${{ steps.compile_step.outputs.qtversion }}-${{ matrix.platform }}
-          path: ./REG-LINUX/buildroot/output/host/
 
   create_release:
     name: Create release
