@@ -35,9 +35,6 @@ jobs:
         id: compile_step
         shell: bash
         run: |
-          # Abort before 6 hours limit to save artifacts
-          ( sleep 20700; exit 1 ) </dev/null &>/dev/null &
-          
           cat << EOF > free_some_space.sh
           #!/bin/bash
           cd "\$1"
@@ -50,9 +47,6 @@ jobs:
           done
           EOF
           chmod 755 free_some_space.sh
-          
-          cat free_some_space.sh
-          
           
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
           cd REG-LINUX
@@ -86,11 +80,11 @@ jobs:
           echo "qtversion=${qtversion}"
           
           # Create built output directory
-          mkdir -p REG-QT6-COMPILED
+          mkdir -p "${GITHUB_WORKSPACE}/REG-QT6-COMPILED"
           
           # Get file if already released and avoid compiling again
-          curl -sfLO --output-dir ./REG-QT6-COMPILED "https://github.com/${GITHUB_REPOSITORY}/releases/download/${qtversion}/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" || ${{ true }}
-          [[ -f "./REG-QT6-COMPILED/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" ]] && exit 0
+          curl -sfLO --output-dir "${GITHUB_WORKSPACE}/REG-QT6-COMPILED" "https://github.com/${GITHUB_REPOSITORY}/releases/download/${qtversion}/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" || ${{ true }}
+          [[ -f "${GITHUB_WORKSPACE}/REG-QT6-COMPILED/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" ]] && exit 0
           
           # Build
           ${GITHUB_WORKSPACE}/REG-LINUX/configs/createDefconfig.sh ${GITHUB_WORKSPACE}/REG-LINUX/configs/reglinux-${{ matrix.platform }}
@@ -107,7 +101,7 @@ jobs:
           find . | grep /host/ | grep Qt >>filelist.txt
           find . | grep /target/ | grep Qt >>filelist.txt
           sort -o sortedfilelist.txt -u filelist.txt
-          tar cvzf  ${GITHUB_WORKSPACE}/REG-QT6-COMPILED/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz -T sortedfilelist.txt
+          tar cvzf  "${GITHUB_WORKSPACE}/REG-QT6-COMPILED/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" -T sortedfilelist.txt
           echo "dorelease=${{ true }}" >> "$GITHUB_OUTPUT"
           
       - name: upload_artifacts_${{ matrix.platform }}
