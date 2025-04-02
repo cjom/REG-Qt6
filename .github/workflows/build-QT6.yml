@@ -1,7 +1,6 @@
 name: Build REG-linux QT6
 
 on:
-  push: 
   workflow_dispatch:
 
 concurrency:
