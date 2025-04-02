@@ -57,7 +57,7 @@ jobs:
           # After each package is compiled and installed, delete some of the biggest folders
           sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind \$(BUILD_DIR) -type f -not \\\( -ipath "*buildroot-config*" -or -ipath "*linux-headers-*" -or -ipath "*toolchain*" -or -ipath "*qt6*" -or -ipath "*skeleton*" -or -iname ".stamp*" -or -iname ".br*" -or -iname ".files*" -or -iname "*config*" -or -iname "Makefile*" -or -iname "*autoconf*" -or -iname "*auto.conf*" -or -iname "CMakeLists*" \\\) -print -delete \
           	du -csB G ./output \
-          	[[ \$(du -csB G ./output | grep -m1 total | grep -o "^[0-9]*") -gt 8 ]] \&\& exit 0 \n :' buildroot/package/pkg-generic.mk
+          	[[ \$\$(du -csB G ./output | grep -m1 total | grep -o "^[0-9]*") -gt 8 ]] \&\& exit 0 \n :' buildroot/package/pkg-generic.mk
           
           cat buildroot/package/pkg-generic.mk
           
