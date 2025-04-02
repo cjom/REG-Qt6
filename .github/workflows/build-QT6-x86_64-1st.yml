@@ -44,6 +44,7 @@ jobs:
         shell: bash
         run: |
           trap 'if [[ -e /__w/REG-Qt6/REG-Qt6/REG-LINUX/.gonextstage ]]; then exit 0; fi' EXIT
+          apt-get install -y gh
           gh actions-cache delete ${{ runner.os }}-build-${{ env.cache-name }}
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
           cd REG-LINUX
