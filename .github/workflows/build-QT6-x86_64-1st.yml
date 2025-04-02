@@ -43,7 +43,7 @@ jobs:
         id: compile_step
         shell: bash
         run: |
-          trap 'if [[ "$GONEXTSTAGE" == "77" ]]; then exit 0; fi' EXIT
+          trap 'if [[ -e /__w/REG-Qt6/REG-Qt6/REG-LINUX/.gonextstage ]]; then exit 0; fi' EXIT
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
           cd REG-LINUX
           git submodule init
@@ -53,7 +53,7 @@ jobs:
           
           # After each package is compiled and installed, delete some of the biggest folders
           sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind \$(BUILD_DIR) -type f -not \\\( -ipath "*buildroot-config*" -or -ipath "*linux-headers-*" -or -ipath "*toolchain*" -or -ipath "*qt6*" -or -ipath "*skeleton*" -or -iname ".stamp*" -or -iname ".br*" -or -iname ".files*" -or -iname "*config*" -or -iname "Makefile*" -or -iname "*autoconf*" -or -iname "*auto.conf*" -or -iname "CMakeLists*" \\\) -delete \
-          	[[ \$(shell du -csB M ./output | grep -m1 total | grep -o "^[0-9]*") -lt 15 ]] || \( GONEXTSTAGE=77 ; exit 77 \) \n :' buildroot/package/pkg-generic.mk
+          	if [[ \$(shell du -csB M ./output | grep -m1 total | grep -o "^[0-9]*") -lt 15 ]] ; then touch /__w/REG-Qt6/REG-Qt6/REG-LINUX/.gonextstage ; exit 77 ; fi \n :' buildroot/package/pkg-generic.mk
           
           # After each downloaded package is extracted, delete older and keep latest 3
           sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs -r rm -rfv :' buildroot/package/pkg-generic.mk
