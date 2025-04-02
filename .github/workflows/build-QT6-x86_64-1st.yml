@@ -28,9 +28,19 @@ jobs:
       dorelease: ${{ false || steps.compile_step.outputs.dorelease }}
     strategy:
       matrix:
-        platform: [rk3288, h5, bcm2711, bcm2712, rk3326, rk3399, rk3588, s905gen3, s922x, sm8250, asahi, jh7110, k1, x86_64, x86_64_v3]
+        platform: [x86_64]
       fail-fast: false
     steps:
+      - name: Cache x86_64
+        id: cache_x86_64
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-x86_64
+        with:
+          path: ./REG-LINUX/buildroot/output
+          key: ${{ runner.os }}-build-${{ env.cache-name }} }}
+          restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}
+
       - name: Compile ${{ matrix.platform }}
         id: compile_step
         shell: bash
@@ -43,8 +53,11 @@ jobs:
           
           # After each package is compiled and installed, delete some of the biggest folders
           sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind \$(BUILD_DIR) -type f -not \\\( -ipath "*buildroot-config*" -or -ipath "*linux-headers-*" -or -ipath "*toolchain*" -or -ipath "*qt6*" -or -ipath "*skeleton*" -or -iname ".stamp*" -or -iname ".br*" -or -iname ".files*" -or -iname "*config*" -or -iname "Makefile*" -or -iname "*autoconf*" -or -iname "*auto.conf*" -or -iname "CMakeLists*" \\\) -print -delete \
-          	du -h -s $(PWD) \
-          	df -Ph $(PWD) \n :' buildroot/package/pkg-generic.mk
+          	du -csB G buildroot/output \
+          	[[ \$(du -csB G buildroot/output | grep -m1 total | grep -o "^[0-9]*") -gt 8 ]] \&\& exit 0 \n :' buildroot/package/pkg-generic.mk
+          
+          cat buildroot/package/pkg-generic.mk
+          
           
           # After each downloaded package is extracted, delete older and keep latest 3
           sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs -r rm -rfv :' buildroot/package/pkg-generic.mk
