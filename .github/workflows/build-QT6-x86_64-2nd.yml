@@ -1,7 +1,11 @@
-name: Build REG-linux QT6 x86_64 1st
+name: Build REG-linux QT6 x86_64 2nd
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Build REG-linux QT6 x86_64 1st"]
+    types:
+      - completed
 
 concurrency:
     group: ${{ github.repository }}-${{ github.workflow }}-${{ github.ref }}
