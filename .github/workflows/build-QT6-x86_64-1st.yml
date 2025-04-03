@@ -34,6 +34,7 @@ jobs:
         id: install_sudo
         shell: bash
         run: |
+          apt-get update
           apt-get install -y sudo
           apt-get autoclean -y
 
