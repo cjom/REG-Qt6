@@ -30,31 +30,13 @@ jobs:
         platform: [x86_64]
       fail-fast: false
     steps:
-      - name: Install sudo
-        id: install_sudo
-        shell: bash
-        run: |
-          apt-get update
-          apt-get install -y sudo
-          apt-get autoclean -y
-
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@master
-        with:
-          root-reserve-mb: 512
-          swap-size-mb: 1024
-          remove-dotnet: 'true'
-          remove-android: 'true'
-          remove-haskell: 'true'
-          remove-codeql: 'true'
-          remove-docker-images: 'true'
-
       - name: Compile ${{ matrix.platform }}
         id: compile_step
         shell: bash
         run: |
           trap 'if [[ -e /__w/REG-Qt6/REG-Qt6/REG-LINUX/.gonextstage ]]; then exit 0; fi' EXIT
           
+          rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQ /opt/hostedtoolcache/go /opt/hostedtoolcache/PyPy /opt/hostedtoolcache/node
           echo "Free space:"
           df -h
           
