@@ -30,20 +30,26 @@ jobs:
         platform: [x86_64]
       fail-fast: false
     steps:
-      - name: Cache x86_64
-        id: cache_x86_64
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-x86_64
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
         with:
-          path: ./REG-LINUX/buildroot/output
-          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          root-reserve-mb: 512
+          swap-size-mb: 1024
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
 
       - name: Compile ${{ matrix.platform }}
         id: compile_step
         shell: bash
         run: |
           trap 'if [[ -e /__w/REG-Qt6/REG-Qt6/REG-LINUX/.gonextstage ]]; then exit 0; fi' EXIT
+          
+          echo "Free space:"
+          df -h
+          
           rm -rf ./REG-LINUX
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
           cd REG-LINUX
@@ -54,7 +60,7 @@ jobs:
           
           # After each package is compiled and installed, delete some of the biggest folders
           sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind \$(BUILD_DIR) -type f -not \\\( -ipath "*buildroot-config*" -or -ipath "*linux-headers-*" -or -ipath "*toolchain*" -or -ipath "*qt6*" -or -ipath "*skeleton*" -or -iname ".stamp*" -or -iname ".br*" -or -iname ".files*" -or -iname "*config*" -or -iname "Makefile*" -or -iname "*autoconf*" -or -iname "*auto.conf*" -or -iname "CMakeLists*" \\\) -delete \
-          	if [[ \$(shell du -csB G ./output | grep -m1 total | grep -o "^[0-9]*") -gt 9 ]] ; then touch /__w/REG-Qt6/REG-Qt6/REG-LINUX/.gonextstage ; exit 77 ; fi \n :' buildroot/package/pkg-generic.mk
+          	if [[ \$(shell du -csB G ./output | grep -m1 total | grep -o "^[0-9]*") -gt 14 ]] ; then touch /__w/REG-Qt6/REG-Qt6/REG-LINUX/.gonextstage ; exit 77 ; fi \n :' buildroot/package/pkg-generic.mk
           
           # After each downloaded package is extracted, delete older and keep latest 3
           sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs -r rm -rfv :' buildroot/package/pkg-generic.mk
@@ -101,6 +107,14 @@ jobs:
           tar cvzf  "${GITHUB_WORKSPACE}/REG-QT6-COMPILED/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" -T sortedfilelist.txt
           echo "dorelease=${{ true }}" >> "$GITHUB_OUTPUT"
           
+      - name: Save cache x86_64
+        id: save_cache_x86_64
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ./REG-LINUX/buildroot/output
+          key: ${{ runner.os }}-build-cache-x86_64
+
       - name: upload_artifacts_${{ matrix.platform }}
         id: upload_artifacts
         uses: actions/upload-artifact@v4

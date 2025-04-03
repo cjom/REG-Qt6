@@ -35,26 +35,46 @@ jobs:
         platform: [x86_64]
       fail-fast: false
     steps:
-      - name: Cache x86_64
-        id: cache_x86_64
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-x86_64
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
         with:
-          path: ./REG-LINUX/buildroot/output
-          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          root-reserve-mb: 512
+          swap-size-mb: 1024
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
 
-      - name: Compile ${{ matrix.platform }}
-        id: compile_step
+      - name: Prepare ${{ matrix.platform }}
+        id: prepare_step
         shell: bash
         run: |
-          if [[ -e ${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output ]]; then mv ${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output ${GITHUB_WORKSPACE}/ ; rm -rf ./REG-LINUX ; fi
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
           cd REG-LINUX
           git submodule init
           git submodule update
           rm -rf .git .github
-          if [[ -e ${GITHUB_WORKSPACE}/output ]]; then mv ${GITHUB_WORKSPACE}/output ${GITHUB_WORKSPACE}/REG-LINUX/buildroot/ ; fi
+          
+          echo "Free space:"
+          df -h
+          
+          
+      - name: Restore cache x86_64
+        id: restore_cache_x86_64
+        if: always()
+        uses: actions/cache/restore@v4
+        with:
+          path: ./REG-LINUX/buildroot/output
+          key: ${{ runner.os }}-build-cache-x86_64
+
+      - name: Compile ${{ matrix.platform }}
+        id: compile_step
+        shell: bash
+        run: |
+          
+          echo "Free space:"
+          df -h
           
           # After each package is compiled and installed, delete some of the biggest folders
           sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind \$(BUILD_DIR) -type f -not \\\( -ipath "*buildroot-config*" -or -ipath "*linux-headers-*" -or -ipath "*toolchain*" -or -ipath "*qt6*" -or -ipath "*skeleton*" -or -iname ".stamp*" -or -iname ".br*" -or -iname ".files*" -or -iname "*config*" -or -iname "Makefile*" -or -iname "*autoconf*" -or -iname "*auto.conf*" -or -iname "CMakeLists*" \\\) -delete \n :' buildroot/package/pkg-generic.mk
