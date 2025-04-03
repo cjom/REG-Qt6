@@ -48,11 +48,13 @@ jobs:
         id: compile_step
         shell: bash
         run: |
+          if [[ -e ${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output ]]; then mv ${GITHUB_WORKSPACE}/REG-LINUX/buildroot/output ${GITHUB_WORKSPACE}/ ; rm -rf ./REG-LINUX ; fi
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
           cd REG-LINUX
           git submodule init
           git submodule update
           rm -rf .git .github
+          if [[ -e ${GITHUB_WORKSPACE}/output ]]; then mv ${GITHUB_WORKSPACE}/output ${GITHUB_WORKSPACE}/REG-LINUX/buildroot/ ; fi
           
           # After each package is compiled and installed, delete some of the biggest folders
           sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind \$(BUILD_DIR) -type f -not \\\( -ipath "*buildroot-config*" -or -ipath "*linux-headers-*" -or -ipath "*toolchain*" -or -ipath "*qt6*" -or -ipath "*skeleton*" -or -iname ".stamp*" -or -iname ".br*" -or -iname ".files*" -or -iname "*config*" -or -iname "Makefile*" -or -iname "*autoconf*" -or -iname "*auto.conf*" -or -iname "CMakeLists*" \\\) -delete \n :' buildroot/package/pkg-generic.mk
