@@ -20,25 +20,20 @@ env:
 jobs:
   build:
     name: Build REG-linux QT6
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     container: reglinux/reglinux-build:latest
     outputs:
       qtversion: ${{ steps.compile_step.outputs.qtversion }}
       dorelease: ${{ false || steps.compile_step.outputs.dorelease }}
     strategy:
       matrix:
+        os: [ubuntu-latest, self-hosted]
         platform: [rk3288, h5, bcm2711, bcm2712, rk3326, rk3399, rk3588, s905gen3, s922x, sm8250, jh7110, k1, x86_64, x86_64_v3, asahi]
-        include:
-          - runs-on: self-hosted
-            platform: x86_64
-          - runs-on: self-hosted
-            platform: x86_64_v3
-          - runs-on: self-hosted
-            platform: asahi
       fail-fast: false
     steps:
       - name: Compile ${{ matrix.platform }}
         id: compile_step
+        if: ${{ ( matrix.os == 'self-hosted' && ( matrix.platform == 'x86_64' || matrix.platform == 'x86_64_v3' || matrix.platform == 'asahi' ) ) || ( matrix.os != 'self-hosted' && matrix.platform != 'x86_64' && matrix.platform != 'x86_64_v3' && matrix.platform != 'asahi' ) }}
         shell: bash
         run: |
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
