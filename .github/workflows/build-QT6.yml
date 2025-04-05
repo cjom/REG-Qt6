@@ -86,9 +86,7 @@ jobs:
               ;;
             *)
               # After each package is compiled and installed, delete some of the already compiled files
-              sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind \$(BUILD_DIR) -type f -not \\\( -ipath "*buildroot-config*" -or -ipath "*linux-headers-*" -or -ipath "*toolchain*" -or -ipath "*skeleton*" -or -iname ".stamp*" -or -iname ".br*" -or -iname ".files*" -or -iname "*config*" -or -iname "Makefile*" -or -iname "*autoconf*" -or -iname "*auto.conf*" -or -iname "CMakeLists*" \\\) -delete \
-                du -h -s $(PWD) \
-                df -Ph $(PWD) \n :' buildroot/package/pkg-generic.mk
+              sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind \$(BUILD_DIR) -type f -not \\\( -ipath "*buildroot-config*" -or -ipath "*linux-headers-*" -or -ipath "*toolchain*" -or -ipath "*skeleton*" -or -iname ".stamp*" -or -iname ".br*" -or -iname ".files*" -or -iname "*config*" -or -iname "Makefile*" -or -iname "*autoconf*" -or -iname "*auto.conf*" -or -iname "CMakeLists*" \\\) -delete\n\tdu -h -s $(PWD)\n\tdf -Ph $(PWD)\n:' buildroot/package/pkg-generic.mk
             ;;
           esac
           
@@ -110,7 +108,7 @@ jobs:
           mkdir -p "${GITHUB_WORKSPACE}/REG-QT6-COMPILED"
           
           # Get file if already released and avoid compiling again
-          curl -sfLO --output-dir "${GITHUB_WORKSPACE}/REG-QT6-COMPILED" "https://github.com/${GITHUB_REPOSITORY}/releases/download/${qtversion}/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" || ${{ true }}
+          wget -q -nd -P "${GITHUB_WORKSPACE}/REG-QT6-COMPILED" "https://github.com/${GITHUB_REPOSITORY}/releases/download/${qtversion}/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" || ${{ true }}
           if [[ ! -f "${GITHUB_WORKSPACE}/REG-QT6-COMPILED/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" ]]
           then
             # Build
