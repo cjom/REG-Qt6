@@ -66,6 +66,18 @@ jobs:
         id: compile_step
         shell: bash
         run: |
+          cat << EOF > free_some_space.sh
+          #!/bin/bash
+          cd "\$1"
+          ESCAPELOOP=0
+          while test "\$(df -BG --output=avail ./ | tail -1 | grep -o "[0-9]*" | head -1)" -lt 6 ; do
+            find ./ -mindepth 1 -maxdepth 1 -type d -not \( -iname "*config*" -or -iname "*headers*" -or -iname "toolchain*" -or -iname "*qt6*" \) -exec du -sk -- {} \; 2>/dev/null | sort -hr | head -1 | cut -f 2- | xargs -d "\\n" -I{} -n1 -rt -- find {} -type f -not \( -iname ".stamp*" -or -iname ".br*" -iname ".files*" -or -or -iname "*config*" -or -iname "Makefile*" -or -iname "*autoconf*" -or -iname "*auto.conf*" -or -iname "CMakeLists*" \) -delete
+            ((ESCAPELOOP++))
+            [[ "\$ESCAPELOOP" -lt 10 ]] || break
+          done
+          EOF
+          chmod 755 free_some_space.sh
+          
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
           cd REG-LINUX
           git submodule init
@@ -86,7 +98,7 @@ jobs:
               ;;
             *)
               # After each package is compiled and installed, delete some of the already compiled files
-              sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\t. $\{GITHUB_WORKSPACE\}/free_some_space.sh $(BUILD_DIR)\n\tdu -h -s $(PWD)\n\tdf -Ph $(PWD)\n:' buildroot/package/pkg-generic.mk
+              sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\t$\{GITHUB_WORKSPACE\}/free_some_space.sh $(BUILD_DIR)\n\tdu -h -s $(PWD)\n\tdf -Ph $(PWD)\n:' buildroot/package/pkg-generic.mk
             ;;
           esac
           
@@ -111,18 +123,6 @@ jobs:
           wget -q -nd -P "${GITHUB_WORKSPACE}/REG-QT6-COMPILED" "https://github.com/${GITHUB_REPOSITORY}/releases/download/${qtversion}/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" || ${{ true }}
           if [[ ! -f "${GITHUB_WORKSPACE}/REG-QT6-COMPILED/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" ]]
           then
-            cat << EOF > ${GITHUB_WORKSPACE}/free_some_space.sh
-            #!/bin/bash
-            cd "\$1"
-            ESCAPELOOP=0
-            while test "\$(df -BG --output=avail ./ | tail -1 | grep -o "[0-9]*" | head -1)" -lt 6 ; do
-              find ./ -mindepth 1 -maxdepth 1 -type d -not \( -iname "*config*" -or -iname "*headers*" -or -iname "toolchain*" -or -iname "*qt6*" \) -exec du -sk -- {} \; 2>/dev/null | sort -hr | head -1 | cut -f 2- | xargs -d "\\n" -I{} -n1 -rt -- find {} -type f -not \( -iname ".stamp*" -or -iname ".br*" -iname ".files*" -or -or -iname "*config*" -or -iname "Makefile*" -or -iname "*autoconf*" -or -iname "*auto.conf*" -or -iname "CMakeLists*" \) -delete
-              ((ESCAPELOOP++))
-              [[ "\$ESCAPELOOP" -lt 10 ]] || break
-            done
-            EOF
-            chmod 755 free_some_space.sh
-          
             # Build
             ${GITHUB_WORKSPACE}/REG-LINUX/configs/createDefconfig.sh ${GITHUB_WORKSPACE}/REG-LINUX/configs/reglinux-${{ matrix.platform }}
             CCACHE_DISABLE=1 make BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot reglinux-${{ matrix.platform }}_defconfig
