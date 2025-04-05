@@ -28,12 +28,42 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, self-hosted]
-        platform: [rk3288, h5, bcm2711, bcm2712, rk3326, rk3399, rk3588, s905gen3, s922x, sm8250, jh7110, k1, x86_64, x86_64_v3, asahi]
+        platform: [bcm2711, bcm2712, h5, jh7110, k1, rk3288, rk3326, rk3399, rk3588, s905gen3, s922x, sm8250, asahi, x86_64, x86_64_v3]
+        exclude:
+          - os: ubuntu-latest
+            platform: asahi
+          - os: ubuntu-latest
+            platform: x86_64
+          - os: ubuntu-latest
+            platform: x86_64_v3
+          - os: self-hosted
+            platform: bcm2711
+          - os: self-hosted
+            platform: bcm2712
+          - os: self-hosted
+            platform: h5
+          - os: self-hosted
+            platform: jh7110
+          - os: self-hosted
+            platform: k1
+          - os: self-hosted
+            platform: rk3288
+          - os: self-hosted
+            platform: rk3326
+          - os: self-hosted
+            platform: rk3399
+          - os: self-hosted
+            platform: rk3588
+          - os: self-hosted
+            platform: s905gen3
+          - os: self-hosted
+            platform: s922x
+          - os: self-hosted
+            platform: sm8250
       fail-fast: false
     steps:
       - name: Compile ${{ matrix.platform }}
         id: compile_step
-        if: ${{ ( matrix.os == 'self-hosted' && ( matrix.platform == 'x86_64' || matrix.platform == 'x86_64_v3' || matrix.platform == 'asahi' ) ) || ( matrix.os != 'self-hosted' && matrix.platform != 'x86_64' && matrix.platform != 'x86_64_v3' && matrix.platform != 'asahi' ) }}
         shell: bash
         run: |
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
@@ -64,6 +94,8 @@ jobs:
           
           # After each downloaded package is extracted, delete older and keep latest 3
           sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs -r rm -rfv :' buildroot/package/pkg-generic.mk
+          
+          cat buildroot/package/pkg-generic.mk
           
           # Disable CCACHE and BR2_PER_PACKAGE_DIRECTORIES
           sed -i "/BR2_CCACHE/d" configs/reglinux-board.common
