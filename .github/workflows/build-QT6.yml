@@ -20,6 +20,7 @@ env:
 jobs:
   build:
     name: Build REG-linux QT6
+    runs-on: ubuntu-latest
     container: reglinux/reglinux-build:latest
     outputs:
       qtversion: ${{ steps.compile_step.outputs.qtversion }}
@@ -28,7 +29,6 @@ jobs:
       matrix:
         platform: [rk3288, h5, bcm2711, bcm2712, rk3326, rk3399, rk3588, s905gen3, s922x, sm8250, jh7110, k1, x86_64, x86_64_v3, asahi]
         include:
-          - runs-on: ubuntu-latest
           - runs-on: self-hosted
             platform: x86_64
           - runs-on: self-hosted
