@@ -34,6 +34,9 @@ jobs:
         id: compile_step
         shell: bash
         run: |
+          apt-get update && apt-get upgrade -y && apt-get install -y llvm-dev libclang-dev && apt-get clean && rm -rf /var/lib/apt/lists/*
+          df -BG --output=avail ./
+          
           rm -rf ./REG-LINUX ./REG-QT6-COMPILED
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
           cd REG-LINUX
