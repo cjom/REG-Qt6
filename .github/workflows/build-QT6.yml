@@ -50,7 +50,7 @@ jobs:
           echo "qtversion=${qtversion}"
           
           # After each package is compiled and installed, keep only newest 4 and qt6
-          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tfind \$(BUILD_DIR) -mindepth 1 -maxdepth 1 -type d -not -iname "*qt6*" -printf "%T\@\\t%p\\n" | sort -g | head -n -4 | cut -f 2- | xargs -r rm -rf \n\tdf -BG --output=avail ./ \n:' buildroot/package/pkg-generic.mk
+          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tdf -BG --output=avail ./ \n:' buildroot/package/pkg-generic.mk
           
           # After each downloaded package is extracted, delete older and keep latest 3
           sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs -r rm -rfv :' buildroot/package/pkg-generic.mk
