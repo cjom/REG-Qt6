@@ -34,7 +34,7 @@ jobs:
         id: compile_step
         shell: bash
         run: |
-          sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y llvm-16-dev libclang-16-dev build-essential && sudo apt-get -y autoremove && sudo apt-get -y clean && sudo rm -rf /var/lib/apt/lists/*
+          sudo apt-get update && sudo apt-get -y remove '*azure*' && sudo apt-get -y upgrade && sudo apt-get -y install llvm-16-dev libclang-16-dev build-essential && sudo apt-get -y autoremove && sudo apt-get -y clean && sudo rm -rf /var/lib/apt/lists/*
           df -BG --output=avail ./
           
           rm -rf ./REG-LINUX ./REG-QT6-COMPILED
