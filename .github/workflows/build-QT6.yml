@@ -66,7 +66,7 @@ jobs:
         shell: bash
         run: |
           [[ ${{ matrix.os }} != macos-latest ]] && sudo apt-get update && sudo apt-get -y remove '*azure*' '*firefox*' && sudo apt-get -y install llvm-16-dev libclang-16-dev && sudo apt-get -y autoremove && sudo apt-get -y clean && sudo rm -rf /var/lib/apt/lists/*
-          df -BG --output=avail ./
+          df -h
           
           rm -rf ./REG-LINUX ./REG-QT6-COMPILED
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
@@ -84,7 +84,7 @@ jobs:
           echo "qtversion=${qtversion}"
           
           # After each package is compiled and installed, keep only newest 4 and qt6
-          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tdf -BG --output=avail ./ \n:' buildroot/package/pkg-generic.mk
+          sed -i '/stamp_installed\:/,/stamp_dircleaned\:/ s:^$:\tdf -h \n:' buildroot/package/pkg-generic.mk
           
           # After each downloaded package is extracted, delete older and keep latest 3
           sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs -r rm -rfv :' buildroot/package/pkg-generic.mk
