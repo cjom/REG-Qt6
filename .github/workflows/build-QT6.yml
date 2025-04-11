@@ -26,7 +26,38 @@ jobs:
       dorelease: ${{ false || steps.compile_step.outputs.dorelease }}
     strategy:
       matrix:
-        os: [ubuntu-24.04-arm]
+        os: [ubuntu-24.04-arm, macos-latest]
+        exclude:
+          - os: ubuntu-24.04-arm
+            platform: asahi
+          - os: macos-latest
+            platform: bcm2711
+          - os: macos-latest
+            platform: bcm2712
+          - os: macos-latest
+            platform: h5
+          - os: macos-latest
+            platform: jh7110
+          - os: macos-latest
+            platform: k1
+          - os: macos-latest
+            platform: rk3288
+          - os: macos-latest
+            platform: rk3326
+          - os: macos-latest
+            platform: rk3399
+          - os: macos-latest
+            platform: rk3588
+          - os: macos-latest
+            platform: s905gen3
+          - os: macos-latest
+            platform: s922x
+          - os: macos-latest
+            platform: sm8250
+          - os: macos-latest
+            platform: x86_64
+          - os: macos-latest
+            platform: x86_64_v3
         platform: [bcm2711, bcm2712, h5, jh7110, k1, rk3288, rk3326, rk3399, rk3588, s905gen3, s922x, sm8250, asahi, x86_64, x86_64_v3]
       fail-fast: false
     steps:
@@ -34,7 +65,7 @@ jobs:
         id: compile_step
         shell: bash
         run: |
-          sudo apt-get update && sudo apt-get -y remove '*azure*' '*firefox*' && sudo apt-get -y install llvm-16-dev libclang-16-dev && sudo apt-get -y autoremove && sudo apt-get -y clean && sudo rm -rf /var/lib/apt/lists/*
+          [[ ${{ matrix.os }} != macos-latest ]] && sudo apt-get update && sudo apt-get -y remove '*azure*' '*firefox*' && sudo apt-get -y install llvm-16-dev libclang-16-dev && sudo apt-get -y autoremove && sudo apt-get -y clean && sudo rm -rf /var/lib/apt/lists/*
           df -BG --output=avail ./
           
           rm -rf ./REG-LINUX ./REG-QT6-COMPILED
