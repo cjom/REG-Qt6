@@ -34,7 +34,7 @@ jobs:
         id: compile_step
         shell: bash
         run: |
-          sudo apt-get update && sudo apt-get -y remove '*azure*' && sudo apt-get -y upgrade && sudo apt-get -y install llvm-16-dev libclang-16-dev build-essential && sudo apt-get -y autoremove && sudo apt-get -y clean && sudo rm -rf /var/lib/apt/lists/*
+          sudo apt-get update && sudo apt-get -y remove '*azure*' '*firefox*' && sudo apt-get -y install llvm-16-dev libclang-16-dev && sudo apt-get -y autoremove && sudo apt-get -y clean && sudo rm -rf /var/lib/apt/lists/*
           df -BG --output=avail ./
           
           rm -rf ./REG-LINUX ./REG-QT6-COMPILED
@@ -92,6 +92,13 @@ jobs:
             tar czf  "${GITHUB_WORKSPACE}/REG-QT6-COMPILED/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" -T sortedfilelist.txt
             echo "dorelease=${{ true }}" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: show_mesa_logs_${{ matrix.platform }}
+        id: show_mesa_logs
+        if: ${{ ! cancelled() }}
+        shell: bash
+        run: |
+          find ./ -type f -iname 'meson-log.txt' -exec cat {} \;
 
       - name: upload_artifacts_${{ matrix.platform }}
         id: upload_artifacts
