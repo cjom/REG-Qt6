@@ -67,7 +67,6 @@ jobs:
         run: |
           [[ ${{ matrix.os }} != macos-latest ]] && sudo apt-get update && sudo apt-get -y remove '*azure*' '*firefox*' && sudo apt-get -y install llvm-16-dev libclang-16-dev && sudo apt-get -y autoremove && sudo apt-get -y clean && sudo rm -rf /var/lib/apt/lists/*
           df -h
-          [ "${{ matrix.os }}" = "macos-latest" ] && alias md5sum='md5 -r'
           
           rm -rf ./REG-LINUX ./REG-QT6-COMPILED
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
@@ -77,7 +76,7 @@ jobs:
           rm -rf .git .github buildroot/.github buildroot/.gitlab
           
           # Merge buildroot patches
-          CUSTOM_DIR=${GITHUB_WORKSPACE}/REG-LINUX/custom BUILDROOT_DIR=${GITHUB_WORKSPACE}/REG-LINUX/buildroot ${GITHUB_WORKSPACE}/REG-LINUX/scripts/linux/mergeToBR.sh
+          CUSTOM_DIR=${GITHUB_WORKSPACE}/REG-LINUX/custom BUILDROOT_DIR=${GITHUB_WORKSPACE}/REG-LINUX/buildroot ${GITHUB_WORKSPACE}/REG-LINUX/scripts/linux/mergeToBR.sh -f
           
           # Version
           qtversion="$(grep -m 1 QT6_VERSION_MAJOR buildroot/package/qt6/qt6.mk | sed -e 's/.*=[ ]*//')$(grep -m 1 'QT6_VERSION ' buildroot/package/qt6/qt6.mk | sed -e 's/.*)//')"
