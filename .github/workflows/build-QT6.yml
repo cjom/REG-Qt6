@@ -67,7 +67,7 @@ jobs:
         run: |
           [[ ${{ matrix.os }} != macos-latest ]] && sudo apt-get update && sudo apt-get -y remove '*azure*' '*firefox*' && sudo apt-get -y install llvm-16-dev libclang-16-dev && sudo apt-get -y autoremove && sudo apt-get -y clean && sudo rm -rf /var/lib/apt/lists/*
           df -h
-          [[ ${{ matrix.os }} == macos-latest ]] && alias md5sum='md5 -r'
+          [ "${{ matrix.os }}" = "macos-latest" ] && alias md5sum='md5 -r'
           
           rm -rf ./REG-LINUX ./REG-QT6-COMPILED
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
