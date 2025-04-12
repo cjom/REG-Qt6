@@ -34,29 +34,15 @@ jobs:
         id: compile_step
         shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get -y remove '*azure*' '*firefox*' '*dotnet*' '*php*' '*cloud*'
-          sudo apt-get -y install llvm-16-dev libclang-16-dev build-essential bsdmainutils cmake git libncurses6 libncurses-dev libssl-dev mercurial texinfo zip default-jre imagemagick subversion autoconf automake bison scons libglib2.0-dev bc mtools u-boot-tools flex wget cpio dosfstools libtool rsync device-tree-compiler gettext locales graphviz python3 python3-numpy python3-matplotlib libgnutls28-dev fonts-droid-fallback libcurl4-openssl-dev rapidjson-dev libasound2-dev libcec-dev libboost-all-dev libint-dev libavcodec-dev libfreetype6-dev libsdl2-dev libsdl2-mixer-dev libfreeimage-dev libavfilter-dev
-          sudo apt-get -y autoremove
-          sudo apt-get -y clean
-          sudo rm -rf /var/lib/apt/lists/*
-          
           rm -rf ./REG-LINUX ./REG-QT6-COMPILED
           git clone --branch master "https://github.com/REG-Linux/REG-Linux.git" ./REG-LINUX
           cd REG-LINUX
           git submodule init
           git submodule update
-          
           rm -rf .git .github buildroot/.github buildroot/.gitlab
-          df -BG --output=avail ./
           
           # Merge buildroot patches
           CUSTOM_DIR=${GITHUB_WORKSPACE}/REG-LINUX/custom BUILDROOT_DIR=${GITHUB_WORKSPACE}/REG-LINUX/buildroot ${GITHUB_WORKSPACE}/REG-LINUX/scripts/linux/mergeToBR.sh
-          
-          # Version
-          qtversion="$(grep -m 1 QT6_VERSION_MAJOR buildroot/package/qt6/qt6.mk | sed -e 's/.*=[ ]*//')$(grep -m 1 'QT6_VERSION ' buildroot/package/qt6/qt6.mk | sed -e 's/.*)//')"
-          echo "qtversion=${qtversion}" >> "$GITHUB_OUTPUT"
-          echo "qtversion=${qtversion}"
           
           # After each downloaded package is extracted, delete older and keep latest 3
           sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs -r rm -rfv :' buildroot/package/pkg-generic.mk
@@ -73,10 +59,23 @@ jobs:
           # Create built output directory
           mkdir -p "${GITHUB_WORKSPACE}/REG-QT6-COMPILED"
           
+          # Version
+          qtversion="$(grep -m 1 QT6_VERSION_MAJOR buildroot/package/qt6/qt6.mk | sed -e 's/.*=[ ]*//')$(grep -m 1 'QT6_VERSION ' buildroot/package/qt6/qt6.mk | sed -e 's/.*)//')"
+          echo "qtversion=${qtversion}" >> "$GITHUB_OUTPUT"
+          echo "qtversion=${qtversion}"
+          
           # Get file if already released and avoid compiling again
           wget -q -nd -P "${GITHUB_WORKSPACE}/REG-QT6-COMPILED" "https://github.com/${GITHUB_REPOSITORY}/releases/download/${qtversion}/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" || ${{ true }}
           if [[ ! -f "${GITHUB_WORKSPACE}/REG-QT6-COMPILED/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" ]]
           then
+            sudo apt-get update
+            sudo apt-get -y remove '*azure*' '*firefox*' '*dotnet*' '*php*' '*cloud*'
+            sudo apt-get -y install llvm-dev libclang-dev build-essential bsdmainutils cmake git libncurses6 libncurses-dev libssl-dev mercurial texinfo zip default-jre imagemagick subversion autoconf automake bison scons libglib2.0-dev bc mtools u-boot-tools flex wget cpio dosfstools libtool rsync device-tree-compiler gettext locales graphviz python3 python3-numpy python3-matplotlib libgnutls28-dev fonts-droid-fallback libcurl4-openssl-dev rapidjson-dev libasound2-dev libcec-dev libboost-all-dev libint-dev libavcodec-dev libfreetype6-dev libsdl2-dev libsdl2-mixer-dev libfreeimage-dev libavfilter-dev
+            sudo apt-get -y autoremove
+            sudo apt-get -y clean
+            sudo rm -rf /var/lib/apt/lists/*
+            df -BG --output=avail ./
+            
             # Build
             ${GITHUB_WORKSPACE}/REG-LINUX/configs/createDefconfig.sh ${GITHUB_WORKSPACE}/REG-LINUX/configs/reglinux-${{ matrix.platform }}
             CCACHE_DISABLE=1 make BR2_EXTERNAL=${GITHUB_WORKSPACE}/REG-LINUX -C ${GITHUB_WORKSPACE}/REG-LINUX/buildroot reglinux-${{ matrix.platform }}_defconfig
