@@ -45,7 +45,7 @@ jobs:
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
             brew install coreutils gnu-sed
             sed -i '' 's+echo "\${hash} \${BUILDROOT_DIR}/\${file}" | md5sum --status --check+[ "\${hash}  \${BUILDROOT_DIR}/\${file}" = "\$(md5sum \${BUILDROOT_DIR}/\${file})" ]+' scripts/linux/mergeToBR.sh
-            PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
+            PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
           fi
           
           # Merge buildroot patches
