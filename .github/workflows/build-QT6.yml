@@ -72,6 +72,14 @@ jobs:
           git submodule update
           rm -rf .git .github buildroot/.github buildroot/.gitlab
           
+          if [ "${{ matrix.platform }}" = "asahi" ]; then
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            brew install md5sha1sum
+          fi
+          
+          # Merge buildroot patches
+          CUSTOM_DIR=${GITHUB_WORKSPACE}/REG-LINUX/custom BUILDROOT_DIR=${GITHUB_WORKSPACE}/REG-LINUX/buildroot ${GITHUB_WORKSPACE}/REG-LINUX/scripts/linux/mergeToBR.sh
+          
           # Create built output directory
           mkdir -p "${GITHUB_WORKSPACE}/REG-QT6-COMPILED"
           
@@ -81,7 +89,7 @@ jobs:
           echo "qtversion=${qtversion}"
           
           # Get file if already released and avoid compiling again
-          wget -nd -P "${GITHUB_WORKSPACE}/REG-QT6-COMPILED" "https://github.com/${GITHUB_REPOSITORY}/releases/download/${qtversion}/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz"
+          wget -q -nd -P "${GITHUB_WORKSPACE}/REG-QT6-COMPILED" "https://github.com/${GITHUB_REPOSITORY}/releases/download/${qtversion}/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz" || ${{ true }}
           if ! gzip -t "${GITHUB_WORKSPACE}/REG-QT6-COMPILED/reglinux-qt6-${qtversion}-${{ matrix.platform }}.tar.gz"
           then
             sudo apt-get update
@@ -91,14 +99,6 @@ jobs:
             sudo apt-get -y clean
             sudo rm -rf /var/lib/apt/lists/*
             df -h
-            
-            if [ "${{ matrix.platform }}" = "asahi" ]; then
-              /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-              brew install md5sha1sum
-            fi
-            
-            # Merge buildroot patches
-            CUSTOM_DIR=${GITHUB_WORKSPACE}/REG-LINUX/custom BUILDROOT_DIR=${GITHUB_WORKSPACE}/REG-LINUX/buildroot ${GITHUB_WORKSPACE}/REG-LINUX/scripts/linux/mergeToBR.sh
             
             # After each downloaded package is extracted, delete older and keep latest 3
             sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs -r rm -rfv :' buildroot/package/pkg-generic.mk
