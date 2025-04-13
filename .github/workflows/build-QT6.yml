@@ -75,7 +75,7 @@ jobs:
           if [ "${{ matrix.platform }}" = "asahi" ]; then
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
             brew install coreutils
-            sed -i 's+echo "\$\{hash\} \$\{BUILDROOT_DIR\}/\${file}" \| md5sum --status --check+"\[ \$\{hash} \$\{BUILDROOT_DIR\}/\$\{file\}" = \$(md5sum \$\{BUILDROOT_DIR\}/\${file}) \]+' scripts/linux/mergeToBR.sh
+            sed -i 's+echo "\$\{hash\} \$\{BUILDROOT_DIR\}/\$\{file\}" \| md5sum --status --check+"\[ \$\{hash\} \$\{BUILDROOT_DIR\}/\$\{file\}" = \$(md5sum \$\{BUILDROOT_DIR\}/\$\{file\}) \]+' scripts/linux/mergeToBR.sh
           fi
           
           # Merge buildroot patches
