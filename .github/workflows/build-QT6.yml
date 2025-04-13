@@ -26,39 +26,8 @@ jobs:
       dorelease: ${{ false || steps.compile_step.outputs.dorelease }}
     strategy:
       matrix:
-        os: [ubuntu-24.04-arm, macos-latest]
-        platform: [bcm2711, bcm2712, h5, jh7110, k1, rk3288, rk3326, rk3399, rk3588, s905gen3, s922x, sm8250, asahi, x86_64, x86_64_v3]
-        exclude:
-          - os: ubuntu-24.04-arm
-            platform: asahi
-          - os: macos-latest
-            platform: bcm2711
-          - os: macos-latest
-            platform: bcm2712
-          - os: macos-latest
-            platform: h5
-          - os: macos-latest
-            platform: jh7110
-          - os: macos-latest
-            platform: k1
-          - os: macos-latest
-            platform: rk3288
-          - os: macos-latest
-            platform: rk3326
-          - os: macos-latest
-            platform: rk3399
-          - os: macos-latest
-            platform: rk3588
-          - os: macos-latest
-            platform: s905gen3
-          - os: macos-latest
-            platform: s922x
-          - os: macos-latest
-            platform: sm8250
-          - os: macos-latest
-            platform: x86_64
-          - os: macos-latest
-            platform: x86_64_v3        
+        os: [macos-latest]
+        platform: [asahi]
       fail-fast: false
     steps:
       - name: Compile ${{ matrix.platform }}
