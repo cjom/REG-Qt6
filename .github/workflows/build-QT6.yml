@@ -70,7 +70,7 @@ jobs:
           then
             sudo apt-get update
             sudo apt-get -y remove '*azure*' '*firefox*' '*dotnet*' '*php*' '*cloud*'
-            sudo apt-get -y install llvm-dev libclang-dev libc6-dev glibc-dev build-essential bsdmainutils cmake git libncurses6 libncurses-dev libssl-dev mercurial texinfo zip default-jre imagemagick subversion autoconf automake bison scons libglib2.0-dev bc mtools u-boot-tools flex wget cpio dosfstools libtool rsync device-tree-compiler gettext locales graphviz python3 python3-numpy python3-matplotlib libgnutls28-dev fonts-droid-fallback libcurl4-openssl-dev rapidjson-dev libasound2-dev libcec-dev libboost-all-dev libint-dev libavcodec-dev libfreetype6-dev libsdl2-dev libsdl2-mixer-dev libfreeimage-dev libavfilter-dev
+            sudo apt-get -y install llvm-dev libclang-dev libc6-dev glibc-devel build-essential bsdmainutils cmake git libncurses6 libncurses-dev libssl-dev mercurial texinfo zip default-jre imagemagick subversion autoconf automake bison scons libglib2.0-dev bc mtools u-boot-tools flex wget cpio dosfstools libtool rsync device-tree-compiler gettext locales graphviz python3 python3-numpy python3-matplotlib libgnutls28-dev fonts-droid-fallback libcurl4-openssl-dev rapidjson-dev libasound2-dev libcec-dev libboost-all-dev libint-dev libavcodec-dev libfreetype6-dev libsdl2-dev libsdl2-mixer-dev libfreeimage-dev libavfilter-dev
             sudo apt-get -y autoremove
             sudo apt-get -y clean
             sudo rm -rf /var/lib/apt/lists/*
