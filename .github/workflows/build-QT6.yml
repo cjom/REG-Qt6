@@ -26,8 +26,11 @@ jobs:
       dorelease: ${{ false || steps.compile_step.outputs.dorelease }}
     strategy:
       matrix:
-        os: [macos-latest]
-        platform: [asahi]
+        os: [ubuntu-24.04-arm]
+        platform: [bcm2711, bcm2712, h5, jh7110, k1, rk3288, rk3326, rk3399, rk3588, s905gen3, s922x, sm8250, x86_64, x86_64_v3]
+        include:
+          - os: self-hosted
+            platform: asahi
       fail-fast: false
     steps:
       - name: Compile ${{ matrix.platform }}
@@ -40,13 +43,6 @@ jobs:
           git submodule init
           git submodule update
           rm -rf .git .github buildroot/.github buildroot/.gitlab
-          
-          if [ "${{ matrix.platform }}" = "asahi" ]; then
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-            brew install coreutils gnu-sed
-            sed -i '' 's+echo "\${hash} \${BUILDROOT_DIR}/\${file}" | md5sum --status --check+[ "\${hash}  \${BUILDROOT_DIR}/\${file}" = "\$(md5sum \${BUILDROOT_DIR}/\${file})" ]+' scripts/linux/mergeToBR.sh
-            PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
-          fi
           
           # Merge buildroot patches
           CUSTOM_DIR=${GITHUB_WORKSPACE}/REG-LINUX/custom BUILDROOT_DIR=${GITHUB_WORKSPACE}/REG-LINUX/buildroot ${GITHUB_WORKSPACE}/REG-LINUX/scripts/linux/mergeToBR.sh
@@ -70,8 +66,8 @@ jobs:
               sudo apt-get -y autoremove
               sudo apt-get -y clean
               sudo rm -rf /var/lib/apt/lists/*
+              df -BG --output=avail ./
             fi
-            df -h
             
             # After each downloaded package is extracted, delete older and keep latest 3
             sed -i 's:(TAR_OPTIONS) -:(TAR_OPTIONS) - \&\& find \$\$(DL_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%T\@\\t%p\\n" | sort -g | head -n -3 | cut -f 2- | xargs -r rm -rfv :' buildroot/package/pkg-generic.mk
